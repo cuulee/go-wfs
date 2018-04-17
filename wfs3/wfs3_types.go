@@ -28,6 +28,11 @@
 package wfs3
 
 import (
+	"bytes"
+	"fmt"
+	"html/template"
+	"io/ioutil"
+
 	"github.com/go-spatial/tegola/geom/encoding/geojson"
 	"github.com/jban332/kin-openapi/openapi3"
 )
@@ -44,6 +49,19 @@ func (rc RootContent) ContentType(contentType string) RootContent {
 		l.ContentType(contentType)
 	}
 	return rc
+}
+
+func (r *RootContent) MarshalHTML() string {
+	var rslt bytes.Buffer
+	t, err := template.New("root").Parse(rootTemplate)
+	if err != nil {
+		panic(fmt.Sprintf("Couldn't parse rootTemplate: %v", err))
+	}
+	if err := t.Execute(&rslt, r); err != nil {
+		panic(fmt.Sprintf("RootContent.MarshalHTML Execute() failed: %v", err))
+	}
+	brslt, err := ioutil.ReadAll(&rslt)
+	return string(brslt)
 }
 
 var RootContentSchema openapi3.Schema = openapi3.Schema{
@@ -134,6 +152,19 @@ var LinkSchema openapi3.Schema = openapi3.Schema{
 
 func (l *Link) ContentType(contentType string) {
 	l.Type = contentType
+}
+
+func (l *Link) MarshalHTML() string {
+	var rslt bytes.Buffer
+	t, err := template.New("link").Parse(linkTemplate)
+	if err != nil {
+		panic("Couldn't parse linkTemplate")
+	}
+	if err := t.Execute(&rslt, l); err != nil {
+		panic("Couldn't execute linkTemplate")
+	}
+	brslt, err := ioutil.ReadAll(&rslt)
+	return string(brslt)
 }
 
 // --- @See https://raw.githubusercontent.com/opengeospatial/WFS_FES/master/core/openapi/schemas/collectionInfo.yaml
